@@ -5,3 +5,5 @@ pyaudio
 numpy
 openai
 python-dotenv
+elevenlabs
+pygame

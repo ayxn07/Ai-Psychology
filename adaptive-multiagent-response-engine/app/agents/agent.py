@@ -7,7 +7,6 @@ class Agent:
         self.flan_client = flan_client
 
     def select_strategy(self, context: str, intent: str) -> str:
-        # Map patient's intent to appropriate therapeutic questioning strategy
         strategy_map = {
             "INFORMATION": "PROBE_DETAILS",
             "EMOTIONAL_EXPRESSION": "PROBE_EMOTION",
@@ -20,8 +19,7 @@ class Agent:
         
         return strategy_map.get(intent, "PROBE_DETAILS")
 
-    def generate_response(self, context: str, intent: str, strategy: str) -> str:
-        # Map strategy to clear learning goal for student therapist
+    def generate_response(self, context: str, intent: str, strategy: str, language: str = "English") -> str:
         strategy_descriptions = {
             "CLARIFY": "Ask for clarification to understand better",
             "PROBE_DETAILS": "Ask about specific details they mentioned",
@@ -37,18 +35,16 @@ class Agent:
         try:
             prompt = RESPONSE_GENERATION_PROMPT.format(
                 context=context,
-                strategy=strategy_desc
+                strategy=strategy_desc,
+                language=language
             )
-            # Higher temperature for more variety in questions
             response = self.flan_client.generate(prompt, max_new_tokens=40, temperature=0.9)
             
-            # Ensure it's a question
             response = response.strip()
             if not response:
                 return "Can you tell me more about that?"
             
             if not response.endswith('?'):
-                # Only add ? if it looks like a question
                 question_words = ['what', 'how', 'why', 'when', 'where', 'who', 'can', 'could', 'would', 'do', 'does', 'did', 'is', 'are', 'was', 'were']
                 first_word = response.split()[0].lower() if response.split() else ''
                 if first_word in question_words:

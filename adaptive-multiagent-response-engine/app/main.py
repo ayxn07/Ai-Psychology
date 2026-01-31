@@ -2,7 +2,6 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 from app.config import Config
@@ -47,9 +46,14 @@ def main():
     )
     similarity_checker = SimilarityChecker(threshold=config.similarity_threshold)
 
+    actual_num_agents = 1 if config.single_person_mode else config.num_agents
+    
     agents = []
-    for i in range(config.num_agents):
-        agent_name = f"Student_{i + 1}"
+    for i in range(actual_num_agents):
+        if config.single_person_mode:
+            agent_name = "Interviewer"
+        else:
+            agent_name = f"Student_{i + 1}"
         agent = Agent(name=agent_name, flan_client=llm_manager)
         agents.append(agent)
 
@@ -66,10 +70,15 @@ def main():
     recorder = AudioRecorder(config)
 
     print("\n" + "=" * 50)
-    print("THERAPY TRAINING SIMULATION")
-    print("=" * 50)
-    print("You are the PATIENT. Speak about your concerns.")
-    print("Student therapists will ask questions to learn.")
+    if config.single_person_mode:
+        print("SINGLE PERSON INTERVIEW MODE")
+        print("=" * 50)
+        print("One interviewer will interact with you.")
+    else:
+        print("THERAPY TRAINING SIMULATION")
+        print("=" * 50)
+        print("You are the PATIENT. Speak about your concerns.")
+        print("Student therapists will ask questions to learn.")
     print("Press Ctrl+C to exit.")
     print("=" * 50 + "\n")
 
@@ -79,14 +88,14 @@ def main():
             if not wav_path:
                 continue
             try:
-                transcript = asr.transcribe(wav_path)
+                transcript, detected_language = asr.transcribe(wav_path)
             finally:
                 if os.path.exists(wav_path):
                     os.remove(wav_path)
             if is_trivial(transcript):
                 continue
             print(f"[PATIENT]: {transcript}")
-            orchestrator.run_interaction(transcript)
+            orchestrator.run_interaction(transcript, detected_language)
     except KeyboardInterrupt:
         print("\n\nShutting down...")
     finally:

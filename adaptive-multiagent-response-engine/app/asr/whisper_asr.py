@@ -12,15 +12,15 @@ class WhisperASR:
             compute_type=compute_type
         )
 
-    def transcribe(self, wav_path: str) -> str:
-        # Force English language to avoid confusion
-        segments, _ = self.model.transcribe(
+    def transcribe(self, wav_path: str) -> tuple:
+        segments, info = self.model.transcribe(
             wav_path, 
             beam_size=5,
-            language="en",  # Force English
-            task="transcribe"  # Transcribe (not translate)
+            task="transcribe"
         )
         text_parts = []
         for segment in segments:
             text_parts.append(segment.text.strip())
-        return " ".join(text_parts).strip()
+        transcribed_text = " ".join(text_parts).strip()
+        detected_language = info.language
+        return transcribed_text, detected_language

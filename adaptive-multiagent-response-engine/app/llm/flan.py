@@ -19,10 +19,10 @@ class FlanClient:
             outputs = self.model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
-                temperature=max(temperature, 0.01),  # Avoid 0 temperature
+                temperature=max(temperature, 0.01),
                 do_sample=True,
                 top_p=0.9,
-                num_beams=1,  # Greedy decoding for speed
+                num_beams=1,
                 early_stopping=True,
                 pad_token_id=self.tokenizer.pad_token_id,
                 eos_token_id=self.tokenizer.eos_token_id

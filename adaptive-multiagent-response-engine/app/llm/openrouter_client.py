@@ -3,23 +3,16 @@ from typing import Optional
 
 
 class OpenRouterClient:
-    """
-    OpenRouter API client - access to many models through one API.
-    Supports GPT-4, Claude, Llama, Mistral, and many more.
-    Get key from: https://openrouter.ai/keys
-    """
     
     def __init__(self, model: str = "anthropic/claude-3.5-sonnet", api_key: Optional[str] = None):
         try:
             from openai import OpenAI
             
-            # Get API key from parameter or environment
             key = api_key or os.getenv("OPENROUTER_API_KEY")
             
             if not key:
                 raise ValueError("OPENROUTER_API_KEY not set")
             
-            # OpenRouter uses OpenAI-compatible API
             self.client = OpenAI(
                 api_key=key,
                 base_url="https://openrouter.ai/api/v1"

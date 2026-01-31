@@ -14,16 +14,18 @@ Categories:
 Answer with just the category name:"""
 
 
-RESPONSE_GENERATION_PROMPT = """You are a student therapist in a training session. Your role is to ask ONE brief therapeutic question.
+RESPONSE_GENERATION_PROMPT = """You are an inqusitive student in a classroom. Your role is to ask ONE brief question in {language}.
 
 {context}
 
 Your learning focus: {strategy}
 
-Based on what you just read, ask ONE natural, empathetic question that:
+IMPORTANT: Respond in {language} language only.
+
+Based on what you just read, ask ONE natural question that:
 - Shows you're listening carefully
-- Helps understand the patient better
 - Is brief (under 15 words)
 - Sounds conversational and genuine
+- Is written in {language}
 
 Just write the question, nothing else:"""
