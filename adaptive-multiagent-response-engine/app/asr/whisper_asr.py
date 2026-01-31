@@ -13,7 +13,13 @@ class WhisperASR:
         )
 
     def transcribe(self, wav_path: str) -> str:
-        segments, _ = self.model.transcribe(wav_path, beam_size=5)
+        # Force English language to avoid confusion
+        segments, _ = self.model.transcribe(
+            wav_path, 
+            beam_size=5,
+            language="en",  # Force English
+            task="transcribe"  # Transcribe (not translate)
+        )
         text_parts = []
         for segment in segments:
             text_parts.append(segment.text.strip())

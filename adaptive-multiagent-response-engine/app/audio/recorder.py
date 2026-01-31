@@ -33,11 +33,11 @@ class AudioRecorder:
         chunks_per_second = self.config.sample_rate / self.config.chunk_size
         max_silent_chunks = int(self.config.silence_duration * chunks_per_second)
         started = False
-        max_seconds = 15
+        max_seconds = 5
         max_chunks = int(max_seconds * chunks_per_second)
         chunk_count = 0
 
-        print("Listening (max 15s)... Speak now!")
+        print("Listening (max 5s)... Speak now!")
 
         while chunk_count < max_chunks:
             data = stream.read(self.config.chunk_size, exception_on_overflow=False)

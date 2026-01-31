@@ -40,25 +40,18 @@ class ConversationStore:
     def build_context(self, max_turns: int) -> str:
         recent_turns = self.turns[-max_turns:] if len(self.turns) > max_turns else self.turns
 
-        context_parts = ["CONVERSATION HISTORY:"]
+        context_parts = ["THERAPY TRAINING SESSION:"]
+        context_parts.append("(PRIMARY = Patient, Agents = Student Therapists)")
+        context_parts.append("")
+        
         for turn in recent_turns:
-            context_parts.append(f"{turn.speaker}: {turn.text}")
+            if turn.speaker == "PRIMARY":
+                context_parts.append(f"PATIENT: {turn.text}")
+            else:
+                context_parts.append(f"STUDENT {turn.speaker}: {turn.text}")
 
-        context_parts.append("")
-        context_parts.append("ACTIVE THREADS:")
-        if self.active_threads:
-            for thread in self.active_threads:
-                context_parts.append(f"- {thread}")
-        else:
-            context_parts.append("- None identified yet")
-
-        context_parts.append("")
-        context_parts.append("LAST AGENT WHO SPOKE:")
-        context_parts.append(self.last_agent if self.last_agent else "NONE")
-
-        context_parts.append("")
-        context_parts.append("LAST PRIMARY INTENT:")
-        context_parts.append(self.last_primary_intent if self.last_primary_intent else "NONE")
+        if not recent_turns:
+            context_parts.append("(Session just started)")
 
         return "\n".join(context_parts)
 

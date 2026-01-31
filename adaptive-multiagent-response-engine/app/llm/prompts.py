@@ -1,33 +1,29 @@
-INTENT_CLASSIFICATION_PROMPT = """Classify this statement:
-{text}
+INTENT_CLASSIFICATION_PROMPT = """Classify what the patient just said into ONE category:
 
-Choose one: INFORMATION, EMOTIONAL_EXPRESSION, REQUEST_REPEAT, REQUEST_CLARIFICATION, DEFENSIVE, ELABORATION, QUESTION
+Patient said: "{text}"
 
-Answer:"""
+Categories:
+- INFORMATION: Sharing facts or information
+- EMOTIONAL_EXPRESSION: Expressing feelings
+- REQUEST_REPEAT: Asking to repeat something
+- REQUEST_CLARIFICATION: Asking for clarification
+- DEFENSIVE: Being defensive
+- ELABORATION: Adding more details
+- QUESTION: Asking a question
+
+Answer with just the category name:"""
 
 
-AGENT_TURN_DECISION_PROMPT = """Should {agent_name} respond now?
+RESPONSE_GENERATION_PROMPT = """You are a student therapist in a training session. Your role is to ask ONE brief therapeutic question.
 
-Recent conversation:
 {context}
 
-Answer SPEAK or WAIT:"""
+Your learning focus: {strategy}
 
+Based on what you just read, ask ONE natural, empathetic question that:
+- Shows you're listening carefully
+- Helps understand the patient better
+- Is brief (under 15 words)
+- Sounds conversational and genuine
 
-RESPONSE_STRATEGY_PROMPT = """What should the agent ask about?
-
-{context}
-
-Choose one: CLARIFY, PROBE_DETAILS, PROBE_EMOTION, CHALLENGE_ASSUMPTION, REQUEST_EXAMPLE, SUMMARIZE_CONFIRM, FOLLOW_UP_QUESTION
-
-Answer:"""
-
-
-RESPONSE_GENERATION_PROMPT = """Conversation:
-{context}
-
-Strategy: {strategy}
-
-Generate one short question based on what the primary speaker just said:
-
-Question:"""
+Just write the question, nothing else:"""

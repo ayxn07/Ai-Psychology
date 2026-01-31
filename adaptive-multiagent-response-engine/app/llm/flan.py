@@ -12,17 +12,20 @@ class FlanClient:
         self.model.eval()
 
     def generate(self, prompt: str, max_new_tokens: int = 128, temperature: float = 0.7) -> str:
-        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=1024)
+        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
-                temperature=temperature,
-                do_sample=temperature > 0,
-                num_beams=1 if temperature > 0 else 4,
-                early_stopping=True
+                temperature=max(temperature, 0.01),  # Avoid 0 temperature
+                do_sample=True,
+                top_p=0.9,
+                num_beams=1,  # Greedy decoding for speed
+                early_stopping=True,
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=self.tokenizer.eos_token_id
             )
 
         response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)

@@ -3,3 +3,5 @@ transformers
 faster-whisper
 pyaudio
 numpy
+openai
+python-dotenv

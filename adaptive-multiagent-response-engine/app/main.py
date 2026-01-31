@@ -1,5 +1,10 @@
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from app.config import Config
 from app.audio.recorder import AudioRecorder
 from app.asr.whisper_asr import WhisperASR
@@ -31,8 +36,10 @@ def main():
     print(f"Loading Whisper ASR ({config.whisper_model})...")
     asr = WhisperASR(config)
 
-    print(f"Loading FLAN-T5 ({config.flan_model})...")
-    flan_client = FlanClient(config)
+    print(f"Loading LLM...")
+    from app.llm.llm_manager import LLMManager
+    llm_manager = LLMManager(config)
+    print(f"✓ Using {llm_manager.get_client_name()} for question generation")
 
     memory = ConversationStore(similarity_window=config.similarity_window)
     thread_inferencer = ThreadInferencer(
@@ -42,13 +49,13 @@ def main():
 
     agents = []
     for i in range(config.num_agents):
-        agent_name = f"Agent_{i + 1}"
-        agent = Agent(name=agent_name, flan_client=flan_client)
+        agent_name = f"Student_{i + 1}"
+        agent = Agent(name=agent_name, flan_client=llm_manager)
         agents.append(agent)
 
     orchestrator = Orchestrator(
         agents=agents,
-        flan_client=flan_client,
+        flan_client=llm_manager,
         memory=memory,
         thread_inferencer=thread_inferencer,
         similarity_checker=similarity_checker,
@@ -59,7 +66,10 @@ def main():
     recorder = AudioRecorder(config)
 
     print("\n" + "=" * 50)
-    print("System ready. Speak to interact.")
+    print("THERAPY TRAINING SIMULATION")
+    print("=" * 50)
+    print("You are the PATIENT. Speak about your concerns.")
+    print("Student therapists will ask questions to learn.")
     print("Press Ctrl+C to exit.")
     print("=" * 50 + "\n")
 
@@ -75,7 +85,7 @@ def main():
                     os.remove(wav_path)
             if is_trivial(transcript):
                 continue
-            print(f"[PRIMARY]: {transcript}")
+            print(f"[PATIENT]: {transcript}")
             orchestrator.run_interaction(transcript)
     except KeyboardInterrupt:
         print("\n\nShutting down...")

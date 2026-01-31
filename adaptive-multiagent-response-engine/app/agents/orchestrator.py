@@ -43,27 +43,18 @@ class Orchestrator:
         return "INFORMATION"
 
     def select_speaking_agent(self, context: str, intent: str) -> Agent:
-        speak_agents = []
-        wait_agents = []
-        for agent in self.agents:
-            if agent.decide_to_speak(context, intent):
-                speak_agents.append(agent)
-            else:
-                wait_agents.append(agent)
-        if speak_agents:
-            # If last agent spoke and wants to follow up, let them go again
-            last_agent_name = self.memory.last_agent
-            for agent in speak_agents:
+        # Simplified: Use round-robin to reduce LLM calls
+        # If last agent spoke, give them priority for continuity
+        last_agent_name = self.memory.last_agent
+        if last_agent_name:
+            for agent in self.agents:
                 if agent.name == last_agent_name:
-                    return agent
-            for i, agent in enumerate(self.agents):
-                if agent in speak_agents:
-                    idx = (self.round_robin_index + i) % len(self.agents)
-                    if self.agents[idx] in speak_agents:
-                        self.round_robin_index = (idx + 1) % len(self.agents)
-                        return self.agents[idx]
-            self.round_robin_index = (self.round_robin_index + 1) % len(self.agents)
-            return speak_agents[0]
+                    # 50% chance to continue with same agent for continuity
+                    import random
+                    if random.random() < 0.5:
+                        return agent
+        
+        # Otherwise use round-robin
         selected = self.agents[self.round_robin_index]
         self.round_robin_index = (self.round_robin_index + 1) % len(self.agents)
         return selected
@@ -79,13 +70,22 @@ class Orchestrator:
         recent_outputs = self.memory.get_recent_agent_outputs()
 
         if self.similarity_checker.is_too_similar(response, recent_outputs):
-            new_response = agent.generate_response(context, intent, strategy)
+            # Try up to 2 times to get a unique question
+            for attempt in range(2):
+                new_response = agent.generate_response(context, intent, strategy)
+                if not self.similarity_checker.is_too_similar(new_response, recent_outputs):
+                    return new_response
+            # If still similar, return it anyway but with variation
             return new_response
 
         return response
 
     def process_turn(self, primary_text: str) -> Tuple[str, str, str]:
-        intent = self.classify_intent(primary_text)
+        if self.config.use_intent_classification:
+            intent = self.classify_intent(primary_text)
+        else:
+            intent = "INFORMATION"  # Default intent for speed
+        
         self.memory.add_primary_turn(primary_text, intent)
         self.thread_inferencer.update_if_needed(self.memory)
         context = self.memory.build_context(self.config.max_context_turns)
@@ -94,17 +94,23 @@ class Orchestrator:
         response = selected_agent.generate_response(context, intent, strategy)
         response = self.check_and_regenerate(selected_agent, response, context, intent, strategy)
         self.memory.add_agent_turn(selected_agent.name, response, strategy)
-        # If strategy is FOLLOW_UP_QUESTION, allow same agent to speak again
-        if strategy == "FOLLOW_UP_QUESTION":
-            context = self.memory.build_context(self.config.max_context_turns)
-            followup_agent = selected_agent
-            followup_strategy = followup_agent.select_strategy(context, intent)
-            followup_response = followup_agent.generate_response(context, intent, followup_strategy)
-            followup_response = self.check_and_regenerate(followup_agent, followup_response, context, intent, followup_strategy)
-            self.memory.add_agent_turn(followup_agent.name, followup_response, followup_strategy)
-            return followup_agent.name, followup_strategy, followup_response
+        # Return the single response - removed double-response bug
         return selected_agent.name, strategy, response
 
     def run_interaction(self, primary_text: str) -> None:
-        agent_name, strategy, response = self.process_turn(primary_text)
-        print(f"\n[{agent_name}] ({strategy}): {response}\n")
+        try:
+            print("Processing...", end="", flush=True)
+            agent_name, strategy, response = self.process_turn(primary_text)
+            print("\r" + " " * 20 + "\r", end="")  # Clear "Processing..."
+            
+            # Format agent name as "STUDENT 1", "STUDENT 2", etc.
+            student_num = agent_name.split("_")[-1] if "_" in agent_name else "1"
+            
+            # Make sure response is not empty
+            if not response or len(response.strip()) < 3:
+                response = "Can you tell me more about that?"
+            
+            print(f"[STUDENT {student_num}]: {response}\n")
+        except Exception as e:
+            print(f"\n⚠ Error generating response: {e}")
+            print("Trying again...\n")
