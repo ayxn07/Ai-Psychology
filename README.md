@@ -60,6 +60,43 @@ use_intent_classification: bool = False  # Set True for more sophisticated respo
 silence_threshold: float = 200.0  # Audio sensitivity (lower = more sensitive)
 ```
 
+## 🔊 Text-to-Speech (Optional)
+
+Add realistic voice output to AI therapist responses using ElevenLabs.
+
+### Setup TTS
+
+**1. Get ElevenLabs API Key**
+
+Sign up at https://elevenlabs.io and get your API key from the profile page.
+
+**2. Configure TTS**
+
+Add to your `.env` file in `adaptive-multiagent-response-engine`:
+
+```
+ELEVENLABS_API_KEY=sk_your-elevenlabs-api-key-here
+ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+```
+
+**3. Choose a Voice**
+
+Browse voices at https://elevenlabs.io/voice-library
+
+Copy the Voice ID and update `ELEVENLABS_VOICE_ID` in your `.env` file.
+
+Default voice: Rachel (21m00Tcm4TlvDq8ikWAM)
+
+### Enable/Disable TTS
+
+Edit `app/config.py`:
+
+```python
+enable_tts: bool = True  # Set False to disable voice output
+```
+
+TTS is enabled by default when API key is configured. The system automatically falls back to text-only mode if TTS encounters errors.
+
 ## 💰 Cost
 
 - **Claude 3.5 Sonnet**: ~$0.003 per interaction
@@ -85,6 +122,23 @@ OPENROUTER_API_KEY=sk-or-v1-your-key-here
 **Too slow?**
 - Set `use_intent_classification = False` in config.py
 - Use faster model: `openai/gpt-3.5-turbo`
+
+**TTS not working?**
+- Verify `ELEVENLABS_API_KEY` is set in `.env` file
+- Check API key is valid at https://elevenlabs.io
+- Ensure `pygame` is installed: `pip install pygame`
+- Check console for TTS error messages
+- Set `enable_tts = False` in config.py to disable TTS
+
+**TTS audio quality issues?**
+- Try a different voice ID from https://elevenlabs.io/voice-library
+- Check your internet connection (TTS requires API calls)
+- Verify audio output device is working
+
+**TTS causing delays?**
+- Normal: 1-3 seconds for audio generation
+- If longer, check network connection
+- System continues with text if TTS times out (10s)
 
 ---
 
